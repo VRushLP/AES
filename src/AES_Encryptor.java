@@ -16,14 +16,16 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 public class AES_Encryptor {
-	public static String mode = "decrypt";
+
+	public static int mode = 1;
+	public static final int ENCRYPT = 0;
 
 	public static String encrypt(byte[] encryptionKey, byte[] initVector, String plaintext) {
 		try {
 			IvParameterSpec iv = new IvParameterSpec(initVector);
 			SecretKeySpec cKeySpec = new SecretKeySpec(encryptionKey, "AES");
 
-			// Encrypt the thing
+			// Encrypt the things
 			Cipher cipher = Cipher.getInstance("AES/CTR/PKCS5PADDING");
 			cipher.init(Cipher.ENCRYPT_MODE, cKeySpec, iv);
 			byte[] encryptedBytes = cipher.doFinal(plaintext.getBytes());
@@ -56,9 +58,9 @@ public class AES_Encryptor {
 		try {
 			BufferedReader bufferedReader = new BufferedReader(new FileReader(filename));
 			StringBuilder stringBuilder = new StringBuilder();
-			String c = null;
-			while ((c = bufferedReader.readLine()) != null) {
-				stringBuilder.append(c).append("\n");
+			String input = null;
+			while ((input = bufferedReader.readLine()) != null) {
+				stringBuilder.append(input);
 			}
 
 			bufferedReader.close();
@@ -120,7 +122,6 @@ public class AES_Encryptor {
 	}
 
 	public static void main(String[] args) {
-
 		SecureRandom random = new SecureRandom();
 		// Generate random 128 bit (16 bytes) key
 		byte encryptionKey[] = new byte[16];
@@ -137,9 +138,9 @@ public class AES_Encryptor {
 		// random.nextBytes(iv);
 		iv = getBadKey();
 
-		if (mode.equalsIgnoreCase("encrypt")) {
-			String plaintext = "Hello World";
-			// String plaintext = reader("King James Bible.txt");
+		if (mode == ENCRYPT) {
+			// String plaintext = "Hello World";
+			String plaintext = reader("King James Bible.txt");
 
 			long encryptBegin = System.nanoTime();
 			String ciphertext = encrypt(encryptionKey, iv, plaintext);
@@ -151,20 +152,19 @@ public class AES_Encryptor {
 			long macEnd = System.nanoTime();
 			System.out.println("Time to generate MAC: " + (macEnd - macBegin));
 
-			writeToFile(ciphertext, "ciphertext.txt");
-			writeToFile(mac, "MAC.txt");
+			writeToFile(ciphertext, "ciphertext");
+			writeToFile(mac, "MAC");
 		} else {
 
-			String mac = reader("MAC.txt");
-			String ciphertext = reader("ciphertext.txt");
+			String mac = reader("MAC");
+			String ciphertext = reader("ciphertext");
 
 			if (verifyMAC(mac, ciphertext, authenticationKey)) {
 				long decryptBegin = System.nanoTime();
 				String decryptedCiphertext = decrypt(encryptionKey, iv, ciphertext);
 				long decryptEnd = System.nanoTime();
 				System.out.println("Time to decrypt: " + (decryptEnd - decryptBegin));
-				writeToFile(decryptedCiphertext, "decrypted.txt");
-
+				writeToFile(decryptedCiphertext, "decrypted");
 			} else {
 				System.out.println("Input was not authentic. Decryption was aborted.");
 			}
